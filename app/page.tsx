@@ -3,7 +3,7 @@ import { BookshelfWithFilter } from "@/components/bookshelf-with-filter";
 import { FeaturedStoryCard } from "@/components/featured-story-card";
 import { AdminLink } from "@/components/admin-link";
 import type { Story } from "@/lib/database.types";
-import { BookMarked, BookOpen, Feather, Sparkles } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 async function getStories(): Promise<Story[]> {
   const supabase = createClient();
