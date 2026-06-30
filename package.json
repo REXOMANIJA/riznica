@@ -1,0 +1,42 @@
+{
+  "name": "mojblog",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@radix-ui/react-dialog": "^1.1.17",
+    "@radix-ui/react-label": "^2.1.10",
+    "@radix-ui/react-select": "^2.3.1",
+    "@radix-ui/react-slot": "^1.3.0",
+    "@radix-ui/react-switch": "^1.3.1",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.22.0",
+    "next": "^15.5.19",
+    "postcss": "^8.5.16",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
+  }
+}
