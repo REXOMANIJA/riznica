@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useRef } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { createClient } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, Maximize2, Eye, Feather } from "lucide-react";
 import type { Story, SizePreset, CoverColor } from "@/lib/database.types";
 import Image from "next/image";
 
@@ -45,6 +45,168 @@ interface StoryFormProps {
   occupiedSlots: number[];
 }
 
+/* ── Fullscreen Writing Popup Component ── */
+function WritingPopup({
+  content,
+  onChange,
+  onClose,
+  title,
+}: {
+  content: string;
+  onChange: (val: string) => void;
+  onClose: () => void;
+  title: string;
+}) {
+  const [tab, setTab] = useState<"write" | "preview">("write");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
+    if (tab === "write" && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [tab]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col" style={{
+      background: "linear-gradient(160deg,#1c1108 0%,#241608 55%,#1c1108 100%)",
+    }}>
+      {/* Top bar */}
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 sm:px-6"
+        style={{ borderBottom: "1px solid rgba(200,148,90,0.15)", background: "rgba(0,0,0,0.3)" }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={onClose} type="button"
+            className="flex items-center gap-1.5 text-stone-500 hover:text-amber-400 transition-colors text-sm shrink-0"
+          >
+            <X className="h-4 w-4" />
+            <span className="hidden sm:inline">Zatvori</span>
+          </button>
+          <div className="w-px h-4 bg-stone-800" />
+          <p className="truncate text-sm font-semibold"
+            style={{ fontFamily: "Georgia,serif", color: "rgba(232,212,160,0.85)" }}
+          >
+            {title || "Nova priča"}
+          </p>
+        </div>
+
+        <div className="flex rounded-md overflow-hidden border border-stone-700 text-xs shrink-0">
+          <button
+            type="button"
+            onClick={() => setTab("write")}
+            className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
+              tab === "write"
+                ? "bg-amber-700 text-stone-950 font-medium"
+                : "bg-stone-800 text-stone-400 hover:text-stone-200"
+            }`}
+          >
+            <Feather className="h-3 w-3" />
+            Piši
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("preview")}
+            className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
+              tab === "preview"
+                ? "bg-amber-700 text-stone-950 font-medium"
+                : "bg-stone-800 text-stone-400 hover:text-stone-200"
+            }`}
+          >
+            <Eye className="h-3 w-3" />
+            Pregled
+          </button>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-hidden">
+        {tab === "write" ? (
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Jednom davno..."
+            className="w-full h-full resize-none border-0 outline-none px-5 py-5 sm:px-8 sm:py-6"
+            style={{
+              background: "transparent",
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              color: "#d4c5a9",
+              fontSize: "15px",
+              lineHeight: "1.9",
+              caretColor: "rgba(200,148,90,0.9)",
+            }}
+          />
+        ) : (
+          <div className="h-full overflow-y-auto px-5 py-5 sm:px-8 sm:py-6"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(200,148,90,0.18) transparent" }}
+          >
+            {/* Opening ornament */}
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,transparent,rgba(200,148,90,0.3))" }} />
+              <span style={{ fontSize: "13px", color: "rgba(200,148,90,0.45)" }}>✦</span>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left,transparent,rgba(200,148,90,0.3))" }} />
+            </div>
+
+            <div style={{ fontFamily: "Georgia,'Times New Roman',serif", color: "#d4c5a9", fontSize: "15px", lineHeight: "1.9" }}>
+              {content.trim() ? (
+                <ReactMarkdown components={{
+                  h1: ({children}) => <h1 style={{fontSize:"1.5em",fontWeight:"bold",marginBottom:"0.5em",marginTop:"1.2em",color:"#e8d4a0"}}>{children}</h1>,
+                  h2: ({children}) => <h2 style={{fontSize:"1.25em",fontWeight:"bold",marginBottom:"0.4em",marginTop:"1em",color:"#e8d4a0"}}>{children}</h2>,
+                  h3: ({children}) => <h3 style={{fontSize:"1.1em",fontWeight:"bold",marginBottom:"0.3em",color:"#e8d4a0"}}>{children}</h3>,
+                  p:  ({children}) => <p style={{marginBottom:"1.1em"}}>{children}</p>,
+                  strong: ({children}) => <strong style={{color:"#e8c87a",fontWeight:"bold"}}>{children}</strong>,
+                  em: ({children}) => <em style={{color:"#c8b890",fontStyle:"italic"}}>{children}</em>,
+                  blockquote: ({children}) => (
+                    <blockquote style={{borderLeft:"3px solid rgba(200,148,90,0.4)",paddingLeft:"1.2em",marginLeft:0,marginBottom:"1em",color:"#a89870",fontStyle:"italic"}}>
+                      {children}
+                    </blockquote>
+                  ),
+                  ul: ({children}) => <ul style={{paddingLeft:"1.5em",marginBottom:"0.8em",listStyleType:"disc"}}>{children}</ul>,
+                  ol: ({children}) => <ol style={{paddingLeft:"1.5em",marginBottom:"0.8em",listStyleType:"decimal"}}>{children}</ol>,
+                  li: ({children}) => <li style={{marginBottom:"0.3em"}}>{children}</li>,
+                  hr: () => (
+                    <div style={{display:"flex",alignItems:"center",gap:"12px",margin:"1.8em 0"}}>
+                      <div style={{flex:1,height:"1px",background:"linear-gradient(to right,transparent,rgba(200,148,90,0.3))"}} />
+                      <span style={{fontSize:"10px",color:"rgba(200,148,90,0.4)",letterSpacing:"4px"}}>✦ ✦ ✦</span>
+                      <div style={{flex:1,height:"1px",background:"linear-gradient(to left,transparent,rgba(200,148,90,0.3))"}} />
+                    </div>
+                  ),
+                  code: ({children}) => <code style={{background:"rgba(0,0,0,0.35)",borderRadius:"3px",padding:"1px 5px",fontSize:"0.85em",fontFamily:"monospace"}}>{children}</code>,
+                }}>{content}</ReactMarkdown>
+              ) : (
+                <p style={{color:"#5a5040",fontStyle:"italic"}}>Nema teksta za prikaz…</p>
+              )}
+            </div>
+
+            {/* Closing ornament */}
+            <div className="flex items-center justify-center gap-3 mt-8 mb-2">
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,transparent,rgba(200,148,90,0.22))" }} />
+              <span style={{fontSize:"11px",color:"rgba(200,148,90,0.35)",letterSpacing:"5px"}}>✦ ✦ ✦</span>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left,transparent,rgba(200,148,90,0.22))" }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom info bar */}
+      <div className="shrink-0 px-4 py-2 sm:px-6 flex items-center justify-between text-xs"
+        style={{ borderTop: "1px solid rgba(200,148,90,0.1)", background: "rgba(0,0,0,0.2)" }}
+      >
+        <span style={{ color: "rgba(200,148,90,0.4)", fontFamily: "Georgia,serif" }}>
+          {content.length} znakova
+        </span>
+        <span style={{ color: "rgba(200,148,90,0.3)", fontFamily: "Georgia,serif", fontSize: "10px" }}>
+          Markdown podržan
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function StoryForm({
   story,
   onSuccess,
@@ -72,7 +234,7 @@ export function StoryForm({
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [contentTab, setContentTab] = useState<"write" | "preview">("write");
+  const [writingPopupOpen, setWritingPopupOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -290,81 +452,47 @@ export function StoryForm({
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label>Tekst priče</Label>
-          <div className="flex rounded-md overflow-hidden border border-stone-700 text-xs">
-            <button
-              type="button"
-              onClick={() => setContentTab("write")}
-              className={`px-3 py-1 transition-colors ${
-                contentTab === "write"
-                  ? "bg-amber-700 text-stone-950 font-medium"
-                  : "bg-stone-800 text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              Piši
-            </button>
-            <button
-              type="button"
-              onClick={() => setContentTab("preview")}
-              className={`px-3 py-1 transition-colors ${
-                contentTab === "preview"
-                  ? "bg-amber-700 text-stone-950 font-medium"
-                  : "bg-stone-800 text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              Pregled
-            </button>
+        <Label>Tekst priče</Label>
+        <button
+          type="button"
+          onClick={() => setWritingPopupOpen(true)}
+          className="w-full min-h-[120px] rounded-md border border-stone-600 bg-stone-800 px-4 py-3 text-left transition-colors hover:border-amber-600/60 hover:bg-stone-800/80 cursor-pointer group relative"
+        >
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 text-stone-600 group-hover:text-amber-500 transition-colors">
+            <Maximize2 className="h-3.5 w-3.5" />
           </div>
-        </div>
-
-        {contentTab === "write" ? (
-          <Textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Jednom davno..."
-            className="min-h-[200px] resize-y font-mono text-sm"
-          />
-        ) : (
-          <div
-            className="min-h-[200px] rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 overflow-auto"
-            style={{
-              fontFamily: "Georgia, 'Times New Roman', serif",
-              color: "#d4c5a9",
-              fontSize: "14px",
-              lineHeight: "1.7",
-            }}
-          >
-            {content.trim() ? (
-              <ReactMarkdown
-                components={{
-                  h1: ({ children }) => <h1 style={{ fontSize: "1.4em", fontWeight: "bold", marginBottom: "0.5em", color: "#e8d4a0" }}>{children}</h1>,
-                  h2: ({ children }) => <h2 style={{ fontSize: "1.2em", fontWeight: "bold", marginBottom: "0.4em", color: "#e8d4a0" }}>{children}</h2>,
-                  h3: ({ children }) => <h3 style={{ fontSize: "1.05em", fontWeight: "bold", marginBottom: "0.3em", color: "#e8d4a0" }}>{children}</h3>,
-                  p:  ({ children }) => <p style={{ marginBottom: "0.9em" }}>{children}</p>,
-                  strong: ({ children }) => <strong style={{ color: "#e8c87a", fontWeight: "bold" }}>{children}</strong>,
-                  em: ({ children }) => <em style={{ color: "#c8b890", fontStyle: "italic" }}>{children}</em>,
-                  blockquote: ({ children }) => (
-                    <blockquote style={{ borderLeft: "3px solid rgba(200,148,90,0.5)", paddingLeft: "1em", marginLeft: 0, color: "#b0a080", fontStyle: "italic" }}>
-                      {children}
-                    </blockquote>
-                  ),
-                  ul: ({ children }) => <ul style={{ paddingLeft: "1.4em", marginBottom: "0.8em", listStyleType: "disc" }}>{children}</ul>,
-                  ol: ({ children }) => <ol style={{ paddingLeft: "1.4em", marginBottom: "0.8em", listStyleType: "decimal" }}>{children}</ol>,
-                  li: ({ children }) => <li style={{ marginBottom: "0.2em" }}>{children}</li>,
-                  hr: () => <hr style={{ border: "none", borderTop: "1px solid rgba(200,148,90,0.25)", margin: "1em 0" }} />,
-                  code: ({ children }) => <code style={{ background: "rgba(0,0,0,0.3)", borderRadius: "3px", padding: "1px 4px", fontSize: "0.85em", fontFamily: "monospace" }}>{children}</code>,
-                }}
-              >
-                {content}
-              </ReactMarkdown>
-            ) : (
-              <p style={{ color: "#5a5040", fontStyle: "italic" }}>Nema teksta za prikaz…</p>
-            )}
-          </div>
-        )}
+          {content.trim() ? (
+            <div
+              className="line-clamp-4 overflow-hidden"
+              style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                color: "#d4c5a9",
+                fontSize: "13px",
+                lineHeight: "1.7",
+              }}
+            >
+              {content.slice(0, 300)}{content.length > 300 ? "…" : ""}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-4 gap-2">
+              <Feather className="h-5 w-5 text-stone-600" />
+              <span className="text-stone-500 text-sm" style={{ fontFamily: "Georgia, serif" }}>
+                Dodirni za pisanje...
+              </span>
+            </div>
+          )}
+        </button>
       </div>
+
+      {/* ── Fullscreen Writing Popup ── */}
+      {writingPopupOpen && (
+        <WritingPopup
+          content={content}
+          onChange={setContent}
+          onClose={() => setWritingPopupOpen(false)}
+          title={title}
+        />
+      )}
 
       <div className="flex items-center gap-3">
         <Switch
